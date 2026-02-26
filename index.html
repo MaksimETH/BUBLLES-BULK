@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BULK Community</title>
+
+<style>
+:root {
+  --bg: #1B1A14;
+  --accent: #2473db;
+  --card: #23221c;
+  --text: #ffffff;
+  --muted: #9ca3af;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--text);
+  overflow: hidden;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+/* HEADER */
+.header {
+  padding: 20px;
+  text-align: center;
+}
+
+.logo {
+  height: 36px;
+}
+
+/* BUBBLE */
+.bubble {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  overflow: hidden;
+  position: absolute;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.bubble:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 20px var(--accent);
+}
+
+.bubble img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* POPUP BACKGROUND */
+.popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: .3s;
+  z-index: 100;
+}
+
+.popup.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* POPUP CARD */
+.popup-card {
+  width: 320px;
+  background: linear-gradient(180deg,#23221c,#1B1A14);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 15px 40px rgba(0,0,0,.6);
+}
+
+/* BANNER */
+.popup-banner {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+}
+
+/* CONTENT */
+.popup-content {
+  padding: 18px 20px 22px;
+  text-align: center;
+}
+
+.popup-content h2 {
+  margin: 5px 0 10px;
+}
+
+.section-title {
+  font-size: .75rem;
+  color: var(--accent);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin: 12px 0 5px;
+}
+
+.popup-desc {
+  font-size: .85rem;
+  color: var(--muted);
+  line-height: 1.3rem;
+  margin-bottom: 12px;
+}
+
+/* LINK */
+.link-box {
+  background: rgba(255,255,255,.05);
+  border-radius: 10px;
+  padding: 8px;
+  margin-bottom: 12px;
+}
+
+.link-box a {
+  color: var(--accent);
+  font-size: .8rem;
+  word-break: break-all;
+  text-decoration: none; /* прибирає підкреслення */
+}
+
+/* CLOSE */
+.close {
+  font-size: .75rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.close:hover {
+  color: var(--accent);
+}
+
+/* FLOAT */
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+/* CLICK */
+@keyframes clickPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+  <img src="BULKLOGO.png" class="logo">
+</header>
+
+<!-- POPUP -->
+<div class="popup" id="popup">
+
+  <div class="popup-card" id="popupCard">
+
+    <div class="popup-content">
+
+      <h2 id="userName"></h2>
+
+      <!-- Association -->
+      <div class="section-title">
+        Association with BULK:
+      </div>
+
+      <div class="popup-desc" id="userDesc"></div>
+
+      <!-- Favorite -->
+      <div class="section-title">
+        My favorite content from BULK community:
+      </div>
+
+      <div class="link-box">
+        <a id="userLink" href="#" target="_blank"></a>
+      </div>
+
+      <div class="close" id="closeBtn">Close</div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+/* ======================
+   USERS DATA
+====================== */
+
+const users = [
+
+  {
+    name: "Crypost",
+    description: "Speed",
+    favoriteLink: "https://x.com/lamaCryp/status/2026645277881377145?s=20",
+    avatar: "Crypostlogo.jpg",
+    banner: "crypostbanner.jpg",
+    audio: "crypost.mp3"
+  } //,
+
+
+];
+
+
+/* ======================
+   POPUP ELEMENTS
+====================== */
+
+const popup = document.getElementById("popup");
+const nameEl = document.getElementById("userName");
+const descEl = document.getElementById("userDesc");
+const linkEl = document.getElementById("userLink");
+const closeBtn = document.getElementById("closeBtn");
+const popupCard = document.getElementById("popupCard");
+
+
+/* ======================
+   CLOSE
+====================== */
+
+closeBtn.onclick = () => popup.classList.remove("active");
+popup.onclick = e => {
+  if(e.target === popup) popup.classList.remove("active");
+};
+
+
+/* ======================
+   SOUND
+====================== */
+
+function playSound(file){
+  if(!file) return;
+  const audio = new Audio(file);
+  audio.play();
+}
+
+
+/* ======================
+   SHOW POPUP
+====================== */
+
+function showPopup(user){
+
+  // Remove old banner
+  const old = document.querySelector(".popup-banner");
+  if(old) old.remove();
+
+  // Add banner
+  const banner = document.createElement("img");
+  banner.src = user.banner;
+  banner.className = "popup-banner";
+  popupCard.prepend(banner);
+
+  // Fill content
+  nameEl.textContent = user.name;
+  descEl.textContent = user.description;
+
+  linkEl.textContent = user.favoriteLink;
+  linkEl.href = user.favoriteLink;
+
+  popup.classList.add("active");
+}
+
+
+/* ======================
+   CREATE BUBBLES
+====================== */
+
+users.forEach(user => {
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+
+  const img = document.createElement("img");
+  img.src = user.avatar;
+
+  bubble.appendChild(img);
+
+  // Random position
+  bubble.style.left = Math.random() * (innerWidth-60)+"px";
+  bubble.style.top = Math.random() * (innerHeight-140)+"px";
+
+  // Float
+  bubble.style.animation = "float 3s ease-in-out infinite";
+
+  // Click
+  bubble.onclick = () => {
+
+    bubble.style.animation = "clickPop .4s";
+
+    setTimeout(()=>{
+      bubble.style.animation = "float 3s ease-in-out infinite";
+    },400);
+
+    playSound(user.audio);
+    showPopup(user);
+  };
+
+  document.body.appendChild(bubble);
+
+});
+
+</script>
+
+</body>
+</html>
