@@ -3,16 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BULK Community</title>
+
+<title>BUBBLES BULK</title>
 
 <style>
+
+  /* ================= CUSTOM CURSOR ================= */
+
+ /*
+
+/* ================= ROOT ================= */
+
 :root {
   --bg: #1B1A14;
   --accent: #2473db;
+  --accent-light: #3b82f6;
+  --accent-glow: #60a5fa;
   --card: #23221c;
   --text: #ffffff;
   --muted: #9ca3af;
+  --dark-muted: #6b7280;
 }
+
+/* ================= BODY ================= */
 
 body {
   margin: 0;
@@ -20,54 +33,177 @@ body {
   min-height: 100vh;
   color: var(--text);
   overflow: hidden;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
-/* HEADER */
+
+
+
+
+/* Animated background gradient */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 20% 50%, rgba(36, 115, 219, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(36, 115, 219, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ================= HEADER ================= */
+
 .header {
-  padding: 20px;
+  padding: 24px 20px;
   text-align: center;
+  position: relative;
+  z-index: 10;
+  background: linear-gradient(180deg, rgba(27, 26, 20, 0.8) 0%, transparent 100%);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.header:active {
+  cursor: grabbing;
+}
+
+.header.dragging {
+  background: linear-gradient(180deg, rgba(27, 26, 20, 1) 0%, rgba(27, 26, 20, 0.5) 100%);
+  box-shadow: 0 8px 32px rgba(36, 115, 219, 0.2);
 }
 
 .logo {
-  height: 36px;
+  height: 56px;
+  transition: transform 0.3s ease;
+  pointer-events: none;
 }
 
-/* BUBBLE */
-.bubble {
+.logo:hover {
+  transform: scale(1.05);
+}
+
+/* ================= BUBBLE CONTAINER ================= */
+
+.bubble-container {
+  position: absolute;
   width: 50px;
   height: 50px;
+  cursor: grab;
+  z-index: 100;
+  touch-action: none;
+}
+
+.bubble-container:active {
+  cursor: grabbing;
+}
+
+.bubble-container.dragging {
+  z-index: 1000;
+}
+
+/* ================= BUBBLE ================= */
+
+.bubble {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   border: 2px solid var(--accent);
   overflow: hidden;
-  position: absolute;
-  cursor: pointer;
-  transition: .2s;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 0 rgba(36, 115, 219, 0.5);
 }
 
-.bubble:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 20px var(--accent);
+.bubble-container.dragging .bubble {
+  z-index: 1000;
+  box-shadow: 0 0 40px rgba(36, 115, 219, 0.8),
+              0 0 80px rgba(36, 115, 219, 0.4),
+              inset 0 0 20px rgba(255, 255, 255, 0.15);
+  border-color: var(--accent-glow);
+}
+
+.bubble-container:hover .bubble {
+  transform: scale(1.25);
+  box-shadow: 0 0 30px rgba(36, 115, 219, 0.6),
+              0 0 60px rgba(36, 115, 219, 0.3),
+              inset 0 0 20px rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-glow);
+}
+
+.bubble::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.bubble-container:hover .bubble::after {
+  opacity: 1;
 }
 
 .bubble img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+  pointer-events: none;
 }
 
-/* POPUP BACKGROUND */
+.bubble-container:hover .bubble img {
+  transform: scale(1.1);
+}
+
+/* ================= ANIMATIONS ================= */
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0) rotate(0deg);
+  }
+  50% { 
+    transform: translateY(-12px) rotate(1.5deg);
+  }
+}
+
+@keyframes clickPop {
+  0% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.4);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ================= POPUP ================= */
+
 .popup {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.7);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
   opacity: 0;
   pointer-events: none;
-  transition: .3s;
-  z-index: 100;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 999;
+  backdrop-filter: blur(8px);
 }
 
 .popup.active {
@@ -75,215 +211,528 @@ body {
   pointer-events: all;
 }
 
-/* POPUP CARD */
 .popup-card {
-  width: 320px;
-  background: linear-gradient(180deg,#23221c,#1B1A14);
-  border-radius: 18px;
+  background: linear-gradient(135deg, #1a1a16 0%, #23221c 100%);
+  width: 340px;
+  padding: 28px;
+  border-radius: 28px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5),
+              0 0 1px rgba(36, 115, 219, 0.3);
+  animation: popupShow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 15px 40px rgba(0,0,0,.6);
 }
 
-/* BANNER */
+.popup-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(36, 115, 219, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Banner */
+
 .popup-banner {
   width: 100%;
-  height: 110px;
+  height: 140px;
   object-fit: cover;
+  border-radius: 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
 }
 
-/* CONTENT */
-.popup-content {
-  padding: 18px 20px 22px;
-  text-align: center;
+.popup-banner:hover {
+  transform: scale(1.02);
 }
 
-.popup-content h2 {
-  margin: 5px 0 10px;
-}
+/* Text */
 
-.section-title {
-  font-size: .75rem;
-  color: var(--accent);
-  letter-spacing: .08em;
+.association {
+  font-size: 0.7rem;
+  color: var(--accent-light);
   text-transform: uppercase;
-  margin: 12px 0 5px;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
 }
 
-.popup-desc {
-  font-size: .85rem;
+#popupName {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 0%, #a0aec0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+#popupDesc {
+  font-size: 0.9rem;
   color: var(--muted);
-  line-height: 1.3rem;
-  margin-bottom: 12px;
+  line-height: 1.6;
+  margin-bottom: 22px;
 }
 
-/* LINK */
+.favorite-title {
+  font-size: 0.7rem;
+  margin: 0 0 12px;
+  color: var(--dark-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+}
+
+/* ================= LINK BOX ================= */
+
 .link-box {
-  background: rgba(255,255,255,.05);
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.12),
+    rgba(37, 99, 235, 0.06)
+  );
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(59, 130, 246, 0.25);
+  display: flex;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  background-size: 200% 100%;
+}
+
+.link-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  transition: left 0.5s ease;
+}
+
+.link-box:hover::before {
+  left: 100%;
+}
+
+.link-box:hover {
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.2),
+    rgba(37, 99, 235, 0.12)
+  );
+  border-color: rgba(96, 165, 250, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(36, 115, 219, 0.2);
+}
+
+.link-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(59, 130, 246, 0.25);
   border-radius: 10px;
-  padding: 8px;
-  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-glow);
+  margin-right: 12px;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.link-box:hover .link-icon {
+  background: rgba(59, 130, 246, 0.4);
+  transform: scale(1.1) rotate(5deg);
+}
+
+.link-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.link-label {
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-bottom: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .link-box a {
-  color: var(--accent);
-  font-size: .8rem;
-  word-break: break-all;
-  text-decoration: none; /* прибирає підкреслення */
+  color: var(--accent-glow);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.3s ease;
 }
 
-/* CLOSE */
+.link-box:hover a {
+  color: #ffffff;
+}
+
+.external-icon {
+  color: var(--dark-muted);
+  margin-left: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.link-box:hover .external-icon {
+  color: var(--accent-glow);
+  transform: translate(2px, -2px);
+}
+
+/* Close */
+
 .close {
-  font-size: .75rem;
-  color: var(--muted);
+  margin-top: 20px;
+  font-size: 0.8rem;
+  color: var(--dark-muted);
   cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  user-select: none;
+}
+
+.close::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--accent-light);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
 }
 
 .close:hover {
-  color: var(--accent);
+  color: var(--text);
 }
 
-/* FLOAT */
-@keyframes float {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0); }
+.close:hover::after {
+  width: 30px;
 }
 
-/* CLICK */
-@keyframes clickPop {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.3); }
-  100% { transform: scale(1); }
+/* Animation */
+
+@keyframes popupShow {
+  from { 
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
+
 </style>
 </head>
 
 <body>
 
-<header class="header">
+<!-- HEADER -->
+
+<header class="header" data-draggable="true">
   <img src="BULKLOGO.png" class="logo">
 </header>
 
+
 <!-- POPUP -->
+
 <div class="popup" id="popup">
 
-  <div class="popup-card" id="popupCard">
+  <div class="popup-card">
 
-    <div class="popup-content">
+    <img id="popupBanner" class="popup-banner">
 
-      <h2 id="userName"></h2>
+    <h2 id="popupName"></h2>
 
-      <!-- Association -->
-      <div class="section-title">
-        Association with BULK:
+    <div class="association">
+      Association with BULK: SPEED
+    </div>
+
+    <p id="popupDesc"></p>
+
+    <div class="favorite-title">
+      Favorite content
+    </div>
+
+    <div class="link-box" onclick="popupLink.click()">
+
+      <div class="link-icon">
+        🔗
       </div>
 
-      <div class="popup-desc" id="userDesc"></div>
-
-      <!-- Favorite -->
-      <div class="section-title">
-        My favorite content from BULK community:
+      <div class="link-content">
+        <span class="link-label">View Content</span>
+        <a id="popupLink" target="_blank"></a>
       </div>
 
-      <div class="link-box">
-        <a id="userLink" href="#" target="_blank"></a>
-      </div>
-
-      <div class="close" id="closeBtn">Close</div>
+      <div class="external-icon">↗</div>
 
     </div>
+
+    <div class="close" id="closeBtn">Close</div>
 
   </div>
 
 </div>
 
+
 <script>
 
-/* ======================
-   USERS DATA
-====================== */
+/* ================= USERS ================= */
 
 const users = [
 
   {
     name: "Crypost",
-    description: "Speed",
+  //  description: "Passionate about high-speed transactions and community growth.",
     favoriteLink: "https://x.com/lamaCryp/status/2026645277881377145?s=20",
     avatar: "Crypostlogo.jpg",
     banner: "crypostbanner.jpg",
     audio: "crypost.mp3"
-  } //,
+  },
 
+//  {
+ //   name: "Rizzy",
+ //   description: "Passionate about high-speed transactions and community growth.",
+  //  favoriteLink: "https://x.com/lamaCryp/status/2026645277881377145?s=20",
+  //  avatar: "Crypostlogo.jpg",
+  //  banner: "crypostbanner.jpg",
+  //  audio: "crypost.mp3"
+ // }
 
 ];
 
 
-/* ======================
-   POPUP ELEMENTS
-====================== */
+/* ================= ELEMENTS ================= */
 
 const popup = document.getElementById("popup");
-const nameEl = document.getElementById("userName");
-const descEl = document.getElementById("userDesc");
-const linkEl = document.getElementById("userLink");
+const popupName = document.getElementById("popupName");
+const popupDesc = document.getElementById("popupDesc");
+const popupLink = document.getElementById("popupLink");
+const popupBanner = document.getElementById("popupBanner");
 const closeBtn = document.getElementById("closeBtn");
-const popupCard = document.getElementById("popupCard");
+const header = document.querySelector('.header');
 
 
-/* ======================
-   CLOSE
-====================== */
+/* ================= CLOSE ================= */
 
-closeBtn.onclick = () => popup.classList.remove("active");
-popup.onclick = e => {
-  if(e.target === popup) popup.classList.remove("active");
+closeBtn.onclick = ()=> popup.classList.remove("active");
+
+popup.onclick = e=>{
+  if(e.target===popup) popup.classList.remove("active");
 };
 
 
-/* ======================
-   SOUND
-====================== */
+/* ================= SOUND ================= */
 
 function playSound(file){
   if(!file) return;
-  const audio = new Audio(file);
-  audio.play();
+  new Audio(file).play();
 }
 
 
-/* ======================
-   SHOW POPUP
-====================== */
+/* ================= SHOW POPUP ================= */
 
 function showPopup(user){
 
-  // Remove old banner
-  const old = document.querySelector(".popup-banner");
-  if(old) old.remove();
+  popupName.textContent = user.name;
+  popupDesc.textContent = user.description;
 
-  // Add banner
-  const banner = document.createElement("img");
-  banner.src = user.banner;
-  banner.className = "popup-banner";
-  popupCard.prepend(banner);
+  popupLink.textContent = user.favoriteLink;
+  popupLink.href = user.favoriteLink;
 
-  // Fill content
-  nameEl.textContent = user.name;
-  descEl.textContent = user.description;
-
-  linkEl.textContent = user.favoriteLink;
-  linkEl.href = user.favoriteLink;
+  popupBanner.src = user.banner;
 
   popup.classList.add("active");
 }
 
 
-/* ======================
-   CREATE BUBBLES
-====================== */
+/* ================= UNIVERSAL DRAG & DROP SYSTEM ================= */
 
-users.forEach(user => {
+class DraggableElement {
+  constructor(element, options = {}) {
+    this.element = element;
+    this.isDragging = false;
+    this.startX = 0;
+    this.startY = 0;
+    this.clickThreshold = 5; // pixels
+    this.clickStartX = 0;
+    this.clickStartY = 0;
+    this.hasMovedEnough = false;
+    
+    // Options for boundary constraints
+    this.minY = options.minY || 0;
+    this.maxY = options.maxY || window.innerHeight;
+    this.minX = options.minX || 0;
+    this.maxX = options.maxX || window.innerWidth;
+    
+    this.setupListeners();
+  }
 
+  setupListeners() {
+    this.element.addEventListener('mousedown', (e) => this.onMouseDown(e));
+    this.element.addEventListener('touchstart', (e) => this.onTouchStart(e));
+  }
+
+  onMouseDown(e) {
+    // Don't drag if clicking on interactive elements inside
+    if (e.target.closest('a, button, input, .close, .link-box')) return;
+    
+    this.startDrag(e.clientX, e.clientY);
+  }
+
+  onTouchStart(e) {
+    if (e.target.closest('a, button, input, .close, .link-box')) return;
+    
+    const touch = e.touches[0];
+    this.startDrag(touch.clientX, touch.clientY);
+  }
+
+  startDrag(clientX, clientY) {
+    this.isDragging = true;
+    this.startX = clientX;
+    this.startY = clientY;
+    this.clickStartX = clientX;
+    this.clickStartY = clientY;
+    this.hasMovedEnough = false;
+
+    const onMouseMove = (e) => this.onMouseMove(e);
+    const onTouchMove = (e) => this.onTouchMove(e);
+    const onMouseUp = (e) => this.onMouseUp(e, onMouseMove, onTouchMove);
+    const onTouchEnd = (e) => this.onTouchEnd(e, onMouseMove, onTouchMove);
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('touchend', onTouchEnd);
+
+    // Store references for cleanup
+    this.currentMouseMove = onMouseMove;
+    this.currentTouchMove = onTouchMove;
+    this.currentMouseUp = onMouseUp;
+    this.currentTouchEnd = onTouchEnd;
+  }
+
+  onMouseMove = (e) => {
+    if (!this.isDragging) return;
+    this.updatePosition(e.clientX, e.clientY);
+  }
+
+  onTouchMove = (e) => {
+    if (!this.isDragging) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    this.updatePosition(touch.clientX, touch.clientY);
+  }
+
+  updatePosition(clientX, clientY) {
+    const deltaX = clientX - this.startX;
+    const deltaY = clientY - this.startY;
+
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    if (distance > this.clickThreshold) {
+      this.hasMovedEnough = true;
+      this.element.classList.add('dragging');
+    }
+
+    if (!this.hasMovedEnough) return;
+
+    const newX = this.element.offsetLeft + deltaX;
+    const newY = this.element.offsetTop + deltaY;
+
+    // Apply boundary constraints
+    const constrainedX = Math.max(this.minX, Math.min(newX, this.maxX - this.element.offsetWidth));
+    const constrainedY = Math.max(this.minY, Math.min(newY, this.maxY - this.element.offsetHeight));
+
+    this.element.style.left = constrainedX + 'px';
+    this.element.style.top = constrainedY + 'px';
+
+    this.startX = clientX;
+    this.startY = clientY;
+  }
+
+  onMouseUp = (e) => {
+    this.endDrag(e.clientX, e.clientY);
+  }
+
+  onTouchEnd = (e) => {
+    if (e.touches.length === 0) {
+      const touch = e.changedTouches[0];
+      this.endDrag(touch.clientX, touch.clientY);
+    }
+  }
+
+  endDrag(clientX, clientY) {
+    const distance = Math.sqrt(
+      Math.pow(clientX - this.clickStartX, 2) + 
+      Math.pow(clientY - this.clickStartY, 2)
+    );
+
+    this.isDragging = false;
+    this.element.classList.remove('dragging');
+
+    // If it was just a click (small distance), trigger click event
+    if (distance < this.clickThreshold && this.element.onclick) {
+      this.element.onclick(new MouseEvent('click'));
+    }
+
+    // Cleanup event listeners
+    if (this.currentMouseMove) {
+      document.removeEventListener('mousemove', this.currentMouseMove);
+    }
+    if (this.currentTouchMove) {
+      document.removeEventListener('touchmove', this.currentTouchMove);
+    }
+    if (this.currentMouseUp) {
+      document.removeEventListener('mouseup', this.currentMouseUp);
+    }
+    if (this.currentTouchEnd) {
+      document.removeEventListener('touchend', this.currentTouchEnd);
+    }
+  }
+}
+
+
+/* ================= CREATE BUBBLES ================= */
+
+users.forEach(user=>{
+
+  // Create container for dragging
+  const bubbleContainer = document.createElement("div");
+  bubbleContainer.className = "bubble-container";
+  bubbleContainer.setAttribute('data-draggable', 'true');
+
+  // Create bubble element
   const bubble = document.createElement("div");
   bubble.className = "bubble";
 
@@ -291,30 +740,88 @@ users.forEach(user => {
   img.src = user.avatar;
 
   bubble.appendChild(img);
+  bubbleContainer.appendChild(bubble);
 
   // Random position
-  bubble.style.left = Math.random() * (innerWidth-60)+"px";
-  bubble.style.top = Math.random() * (innerHeight-140)+"px";
+  bubbleContainer.style.left =
+    Math.random()*(innerWidth-60)+"px";
 
-  // Float
-  bubble.style.animation = "float 3s ease-in-out infinite";
+  bubbleContainer.style.top =
+    Math.random()*(innerHeight-150)+"px";
+
+  // Float animation with random delay - SLOWER & SMOOTHER (8s instead of 3s)
+  const randomDelay = Math.random() * 2 + "s";
+  bubble.style.animation =
+    `float 8s ease-in-out infinite ${randomDelay}`;
+
+  // Get header height for boundary constraint
+  const headerHeight = header ? header.offsetHeight : 100;
+
+  // Make bubble container draggable with boundary constraint
+  new DraggableElement(bubbleContainer, {
+    minY: headerHeight + 10, // Can't drag above header + 10px padding
+    maxY: window.innerHeight,
+    minX: 0,
+    maxX: window.innerWidth
+  });
 
   // Click
-  bubble.onclick = () => {
+  bubbleContainer.onclick = ()=>{
 
-    bubble.style.animation = "clickPop .4s";
+    bubble.style.animation="clickPop .5s cubic-bezier(0.34, 1.56, 0.64, 1)";
 
     setTimeout(()=>{
-      bubble.style.animation = "float 3s ease-in-out infinite";
-    },400);
+      bubble.style.animation=
+        `float 8s ease-in-out infinite ${randomDelay}`;
+    },500);
 
     playSound(user.audio);
     showPopup(user);
+
   };
 
-  document.body.appendChild(bubble);
+  document.body.appendChild(bubbleContainer);
 
 });
+
+
+/* ================= MAKE HEADER DRAGGABLE ================= */
+
+if (header) {
+  new DraggableElement(header);
+}
+
+
+/* ================= AUTO-MAKE FUTURE ELEMENTS DRAGGABLE ================= */
+
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (node.nodeType === 1) { // Element node
+        if (node.hasAttribute('data-draggable') && !node._isDraggableInitialized) {
+          const headerHeight = header ? header.offsetHeight : 100;
+          new DraggableElement(node, {
+            minY: headerHeight + 10,
+            maxY: window.innerHeight,
+            minX: 0,
+            maxX: window.innerWidth
+          });
+          node._isDraggableInitialized = true;
+        }
+      }
+    });
+  });
+});
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+
+</script>
+
+</body>
+</html>
 
 </script>
 
