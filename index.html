@@ -854,12 +854,12 @@ regForm.onsubmit = async (e) => { // Додали async, щоб чекати з�
   e.preventDefault();
 
   // 1. Отримуємо файл з інпуту
-  const avatarFile = avatarInput.files[0]; 
+ const avatarFile = avatarInput.files[0]; 
   let avatarUrl = "BULKLOGO.png"; // Стандартне лого за замовчуванням
 
      if (avatarFile) {
       const formData = new FormData();
-      formData.append("file", avatarFile); 
+      formData.append("file", avatarFile);
       formData.append("upload_preset", "ml_default");
 
       try {
