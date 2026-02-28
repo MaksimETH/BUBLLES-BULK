@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Bubbles bulk</title>
-<link rel="icon" type="image/png" href="WEBLOGO.png">
+<link rel="icon" type="image/jpg" href="WEEEEB.png">
+
 
 <style>
 
@@ -24,6 +25,7 @@
   --text: #ffffff;
   --muted: #9ca3af;
   --dark-muted: #6b7280;
+  --success: #10b981;
 }
 
 /* ================= BODY ================= */
@@ -72,6 +74,9 @@ body::before {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   cursor: grab;
   transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .header:active {
@@ -91,6 +96,30 @@ body::before {
 
 .logo:hover {
   transform: scale(1.05);
+}
+
+/* ================= REGISTRATION BUTTON ================= */
+
+.reg-btn {
+  position: absolute;
+  right: 30px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 15px rgba(36, 115, 219, 0.3);
+  z-index: 20;
+}
+
+.reg-btn:hover {
+  background: var(--accent-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(36, 115, 219, 0.4);
 }
 
 /* ================= BUBBLE CONTAINER ================= */
@@ -122,6 +151,7 @@ body::before {
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 0 0 rgba(36, 115, 219, 0.5);
+  background: var(--card);
 }
 
 .bubble-container.dragging .bubble {
@@ -191,9 +221,9 @@ body::before {
   }
 }
 
-/* ================= POPUP ================= */
+/* ================= POPUP & MODAL ================= */
 
-.popup {
+.popup, .modal {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
@@ -207,12 +237,12 @@ body::before {
   backdrop-filter: blur(8px);
 }
 
-.popup.active {
+.popup.active, .modal.active {
   opacity: 1;
   pointer-events: all;
 }
 
-.popup-card {
+.popup-card, .modal-card {
   background: linear-gradient(135deg, #1a1a16 0%, #23221c 100%);
   width: 340px;
   padding: 28px;
@@ -226,7 +256,14 @@ body::before {
   overflow: hidden;
 }
 
-.popup-card::before {
+.modal-card {
+  width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.popup-card::before, .modal-card::before {
   content: '';
   position: absolute;
   top: -50%;
@@ -247,6 +284,7 @@ body::before {
   margin-bottom: 18px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease;
+  background: #333;
 }
 
 .popup-banner:hover {
@@ -417,6 +455,7 @@ body::before {
   letter-spacing: 0.5px;
   position: relative;
   user-select: none;
+  text-align: center;
 }
 
 .close::after {
@@ -437,6 +476,114 @@ body::before {
 
 .close:hover::after {
   width: 30px;
+}
+
+/* ================= FORM STYLES ================= */
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.form-group input, .form-group textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: white;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus, .form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(36, 115, 219, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.file-input-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+.file-input-btn {
+  display: block;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.file-input-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent);
+  color: white;
+}
+
+.file-input-wrapper input[type=file] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.submit-btn {
+  width: 100%;
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  box-shadow: 0 4px 15px rgba(36, 115, 219, 0.3);
+}
+
+.submit-btn:hover {
+  background: var(--accent-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(36, 115, 219, 0.4);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
 }
 
 /* Animation */
@@ -461,6 +608,7 @@ body::before {
 
 <header class="header" data-draggable="true">
   <img src="BULKLOGO.png" class="logo">
+  <button class="reg-btn" id="openRegBtn">Create Bubble</button>
 </header>
 
 
@@ -474,7 +622,7 @@ body::before {
 
     <h2 id="popupName"></h2>
 
-    <div class="association">
+    <div class="association" id="popupAssociation">
       Association with BULK: SPEED
     </div>
 
@@ -484,7 +632,7 @@ body::before {
       Favorite content
     </div>
 
-    <div class="link-box" onclick="popupLink.click()">
+    <div class="link-box" id="popupLinkBox">
 
       <div class="link-icon">
         🔗
@@ -505,6 +653,59 @@ body::before {
 
 </div>
 
+<!-- REGISTRATION MODAL -->
+
+<div class="modal" id="regModal">
+  <div class="modal-card">
+    <h2 class="modal-title">Create Your Bubble</h2>
+    
+    <form id="regForm">
+      <div class="form-group">
+        <label>➢ Link to your X profile</label>
+        <input type="url" id="xProfile" placeholder="https://x.com/yourusername" required>
+      </div>
+      
+      <div class="form-group">
+        <label>➢ What do you associate BULK with?</label>
+        <input type="text" id="bulkAssociation" placeholder="e.g. SPEED, COMMUNITY, FUTURE" required>
+      </div>
+      
+      <div class="form-group">
+        <label>➢ Link to your favorite Bulk Community content</label>
+        <input type="url" id="favContent" placeholder="https://x.com/..." required>
+      </div>
+      
+      <div class="form-group">
+        <label>➢ Your avatar (bubble image)</label>
+        <div class="file-input-wrapper">
+          <div class="file-input-btn" id="avatarFileName">Choose avatar image...</div>
+          <input type="file" id="avatarUpload" accept="image/*" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>➢ Your banner (popup image)</label>
+        <div class="file-input-wrapper">
+          <div class="file-input-btn" id="bannerFileName">Choose banner image...</div>
+          <input type="file" id="bannerUpload" accept="image/*" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>➢ Your custom sound on click (optional)</label>
+        <div class="file-input-wrapper">
+          <div class="file-input-btn" id="audioFileName">Choose audio file...</div>
+          <input type="file" id="customSound" accept="audio/*">
+        </div>
+      </div>
+      
+      <button type="submit" class="submit-btn">Create Bubble</button>
+    </form>
+    
+    <div class="close" id="closeRegBtn">Cancel</div>
+  </div>
+</div>
+
 
 <script>
 
@@ -514,21 +715,13 @@ const users = [
 
   {
     name: "Crypost",
-  //  description: "Passionate about high-speed transactions and community growth.",
+    association: "SPEED",
+    description: "Passionate about high-speed transactions and community growth.",
     favoriteLink: "https://x.com/lamaCryp/status/2026645277881377145?s=20",
     avatar: "Crypostlogo.jpg",
     banner: "crypostbanner.jpg",
     audio: "crypost.mp3"
-  },
-
-//  {
- //   name: "Rizzy",
- //   description: "Passionate about high-speed transactions and community growth.",
-  //  favoriteLink: "https://x.com/lamaCryp/status/2026645277881377145?s=20",
-  //  avatar: "Crypostlogo.jpg",
-  //  banner: "crypostbanner.jpg",
-  //  audio: "crypost.mp3"
- // }
+  }
 
 ];
 
@@ -540,11 +733,118 @@ const popupName = document.getElementById("popupName");
 const popupDesc = document.getElementById("popupDesc");
 const popupLink = document.getElementById("popupLink");
 const popupBanner = document.getElementById("popupBanner");
+const popupAssociation = document.getElementById("popupAssociation");
+const popupLinkBox = document.getElementById("popupLinkBox");
 const closeBtn = document.getElementById("closeBtn");
+
+const regModal = document.getElementById("regModal");
+const openRegBtn = document.getElementById("openRegBtn");
+const closeRegBtn = document.getElementById("closeRegBtn");
+const regForm = document.getElementById("regForm");
+const avatarInput = document.getElementById("avatarUpload");
+const avatarFileNameDisplay = document.getElementById("avatarFileName");
+const bannerInput = document.getElementById("bannerUpload");
+const bannerFileNameDisplay = document.getElementById("bannerFileName");
+const audioFileInput = document.getElementById("customSound");
+const audioFileNameDisplay = document.getElementById("audioFileName");
+
 const header = document.querySelector('.header');
 
 
-/* ================= CLOSE ================= */
+/* ================= MODAL LOGIC ================= */
+
+openRegBtn.onclick = () => regModal.classList.add("active");
+closeRegBtn.onclick = () => regModal.classList.remove("active");
+
+regModal.onclick = e => {
+  if(e.target === regModal) regModal.classList.remove("active");
+};
+
+avatarInput.onchange = () => {
+  if (avatarInput.files.length > 0) {
+    avatarFileNameDisplay.textContent = avatarInput.files[0].name;
+    avatarFileNameDisplay.style.color = "var(--success)";
+    avatarFileNameDisplay.style.borderColor = "var(--success)";
+  }
+};
+
+bannerInput.onchange = () => {
+  if (bannerInput.files.length > 0) {
+    bannerFileNameDisplay.textContent = bannerInput.files[0].name;
+    bannerFileNameDisplay.style.color = "var(--success)";
+    bannerFileNameDisplay.style.borderColor = "var(--success)";
+  }
+};
+
+audioFileInput.onchange = () => {
+  if (audioFileInput.files.length > 0) {
+    audioFileNameDisplay.textContent = audioFileInput.files[0].name;
+    audioFileNameDisplay.style.color = "var(--success)";
+    audioFileNameDisplay.style.borderColor = "var(--success)";
+  }
+};
+
+regForm.onsubmit = (e) => {
+  e.preventDefault();
+  
+  const xUrl = document.getElementById("xProfile").value;
+  const association = document.getElementById("bulkAssociation").value;
+  const favLink = document.getElementById("favContent").value;
+  
+  // Extract username from X URL for the name
+  let name = "User";
+  try {
+    const url = new URL(xUrl);
+    const pathParts = url.pathname.split('/').filter(p => p);
+    if (pathParts.length > 0) name = "@" + pathParts[0];
+  } catch(e) {}
+
+  // Handle avatar file
+  let avatarUrl = "BULKLOGO.png";
+  if (avatarInput.files.length > 0) {
+    avatarUrl = URL.createObjectURL(avatarInput.files[0]);
+  }
+
+  // Handle banner file
+  let bannerUrl = "BULKLOGO.png";
+  if (bannerInput.files.length > 0) {
+    bannerUrl = URL.createObjectURL(bannerInput.files[0]);
+  }
+
+  const newUser = {
+    name: name,
+    association: association,
+    description: `X Profile: ${xUrl}`,
+    favoriteLink: favLink,
+    avatar: avatarUrl,
+    banner: bannerUrl,
+    audio: null
+  };
+
+  // Handle audio file if provided
+  if (audioFileInput.files.length > 0) {
+    const file = audioFileInput.files[0];
+    newUser.audio = URL.createObjectURL(file);
+  }
+
+  createBubble(newUser);
+  
+  // Reset and close
+  regForm.reset();
+  avatarFileNameDisplay.textContent = "Choose avatar image...";
+  avatarFileNameDisplay.style.color = "var(--muted)";
+  avatarFileNameDisplay.style.borderColor = "rgba(255, 255, 255, 0.2)";
+  bannerFileNameDisplay.textContent = "Choose banner image...";
+  bannerFileNameDisplay.style.color = "var(--muted)";
+  bannerFileNameDisplay.style.borderColor = "rgba(255, 255, 255, 0.2)";
+  audioFileNameDisplay.textContent = "Choose audio file...";
+  audioFileNameDisplay.style.color = "var(--muted)";
+  audioFileNameDisplay.style.borderColor = "rgba(255, 255, 255, 0.2)";
+  regModal.classList.remove("active");
+};
+
+
+/* ================= CLOSE POPUP ================= */
 
 closeBtn.onclick = ()=> popup.classList.remove("active");
 
@@ -552,12 +852,17 @@ popup.onclick = e=>{
   if(e.target===popup) popup.classList.remove("active");
 };
 
+popupLinkBox.onclick = () => {
+  if (popupLink.href) window.open(popupLink.href, '_blank');
+};
+
 
 /* ================= SOUND ================= */
 
 function playSound(file){
   if(!file) return;
-  new Audio(file).play();
+  const audio = new Audio(file);
+  audio.play().catch(e => console.log("Audio play failed:", e));
 }
 
 
@@ -566,12 +871,13 @@ function playSound(file){
 function showPopup(user){
 
   popupName.textContent = user.name;
-  popupDesc.textContent = user.description;
+  popupDesc.textContent = user.description || "";
+  popupAssociation.textContent = `Association with BULK: ${user.association || "NONE"}`;
 
   popupLink.textContent = user.favoriteLink;
   popupLink.href = user.favoriteLink;
 
-  popupBanner.src = user.banner;
+  popupBanner.src = user.banner || "BULKLOGO.png";
 
   popup.classList.add("active");
 }
@@ -606,13 +912,13 @@ class DraggableElement {
 
   onMouseDown(e) {
     // Don't drag if clicking on interactive elements inside
-    if (e.target.closest('a, button, input, .close, .link-box')) return;
+    if (e.target.closest('a, button, input, .close, .link-box, .reg-btn')) return;
     
     this.startDrag(e.clientX, e.clientY);
   }
 
   onTouchStart(e) {
-    if (e.target.closest('a, button, input, .close, .link-box')) return;
+    if (e.target.closest('a, button, input, .close, .link-box, .reg-btn')) return;
     
     const touch = e.touches[0];
     this.startDrag(touch.clientX, touch.clientY);
@@ -726,8 +1032,7 @@ class DraggableElement {
 
 /* ================= CREATE BUBBLES ================= */
 
-users.forEach(user=>{
-
+function createBubble(user) {
   // Create container for dragging
   const bubbleContainer = document.createElement("div");
   bubbleContainer.className = "bubble-container";
@@ -738,7 +1043,8 @@ users.forEach(user=>{
   bubble.className = "bubble";
 
   const img = document.createElement("img");
-  img.src = user.avatar;
+  img.src = user.avatar || "BULKLOGO.png";
+  img.onerror = () => img.src = "BULKLOGO.png";
 
   bubble.appendChild(img);
   bubbleContainer.appendChild(bubble);
@@ -750,7 +1056,7 @@ users.forEach(user=>{
   bubbleContainer.style.top =
     Math.random()*(innerHeight-150)+"px";
 
-  // Float animation with random delay - SLOWER & SMOOTHER (8s instead of 3s)
+  // Float animation with random delay
   const randomDelay = Math.random() * 2 + "s";
   bubble.style.animation =
     `float 8s ease-in-out infinite ${randomDelay}`;
@@ -758,9 +1064,9 @@ users.forEach(user=>{
   // Get header height for boundary constraint
   const headerHeight = header ? header.offsetHeight : 100;
 
-  // Make bubble container draggable with boundary constraint
+  // Make bubble container draggable
   new DraggableElement(bubbleContainer, {
-    minY: headerHeight + 10, // Can't drag above header + 10px padding
+    minY: headerHeight + 10,
     maxY: window.innerHeight,
     minX: 0,
     maxX: window.innerWidth
@@ -768,7 +1074,6 @@ users.forEach(user=>{
 
   // Click
   bubbleContainer.onclick = ()=>{
-
     bubble.style.animation="clickPop .5s cubic-bezier(0.34, 1.56, 0.64, 1)";
 
     setTimeout(()=>{
@@ -778,12 +1083,13 @@ users.forEach(user=>{
 
     playSound(user.audio);
     showPopup(user);
-
   };
 
   document.body.appendChild(bubbleContainer);
+}
 
-});
+// Initialize existing users
+users.forEach(user => createBubble(user));
 
 
 /* ================= MAKE HEADER DRAGGABLE ================= */
@@ -818,11 +1124,6 @@ observer.observe(document.body, {
   childList: true,
   subtree: true
 });
-
-</script>
-
-</body>
-</html>
 
 </script>
 
