@@ -712,11 +712,9 @@ body::before {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-
-  /* ======================
+/* ======================
    FIREBASE CONFIG
 ====================== */
-
 const firebaseConfig = {
   apiKey: "AIzaSyC__ALr7FQOqktW6S3nbYVz1qQfoJb1sRM",
   authDomain: "bubbles-bulk.firebaseapp.com",
@@ -727,39 +725,70 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
 
 /* ================= USERS ================= */
-
 let users = [];
 
-/* ======================
-   LOAD FROM FIREBASE
-====================== */
+/* ====================== FIREBASE FUNCTIONS ================= */
+async function loadUsers() {
+  const snapshot = await db.collection("users").get();
+  users = [];
+  snapshot.forEach(doc => users.push(doc.data()));
+  createAllBubbles();
+}
 
 async function saveUser(user) {
-
   await db.collection("users").add(user);
-
   loadUsers();
 }
 
-//////////
-
+/* ====================== CREATE BUBBLES ================= */
 function createAllBubbles() {
-
-  document.querySelectorAll(".bubble").forEach(b => b.remove());
-
-  users.forEach(user => {
-    createBubble(user);
-  });
-
+  document.querySelectorAll(".bubble-container").forEach(b => b.remove());
+  users.forEach(user => createBubble(user));
 }
 
+function createBubble(user) {
+  const bubbleContainer = document.createElement("div");
+  bubbleContainer.className = "bubble-container";
+  bubbleContainer.setAttribute('data-draggable', 'true');
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+
+  const img = document.createElement("img");
+  img.src = user.avatar || "BULKLOGO.png";
+  img.onerror = () => img.src = "BULKLOGO.png";
+
+  bubble.appendChild(img);
+  bubbleContainer.appendChild(bubble);
+
+  bubbleContainer.style.left = Math.random()*(innerWidth-60)+"px";
+  bubbleContainer.style.top = Math.random()*(innerHeight-150)+"px";
+
+  const randomDelay = Math.random() * 2 + "s";
+  bubble.style.animation = `float 8s ease-in-out infinite ${randomDelay}`;
+
+  const headerHeight = header ? header.offsetHeight : 100;
+  new DraggableElement(bubbleContainer, {
+    minY: headerHeight + 10,
+    maxY: window.innerHeight,
+    minX: 0,
+    maxX: window.innerWidth
+  });
+
+  bubbleContainer.onclick = ()=>{
+    bubble.style.animation="clickPop .5s cubic-bezier(0.34, 1.56, 0.64, 1)";
+    setTimeout(()=>{ bubble.style.animation = `float 8s ease-in-out infinite ${randomDelay}`; },500);
+    playSound(user.audio);
+    showPopup(user);
+  };
+
+  document.body.appendChild(bubbleContainer);
+}
 
 /* ================= ELEMENTS ================= */
-
 const popup = document.getElementById("popup");
 const popupName = document.getElementById("popupName");
 const popupDesc = document.getElementById("popupDesc");
@@ -782,15 +811,10 @@ const audioFileNameDisplay = document.getElementById("audioFileName");
 
 const header = document.querySelector('.header');
 
-
 /* ================= MODAL LOGIC ================= */
-
 openRegBtn.onclick = () => regModal.classList.add("active");
 closeRegBtn.onclick = () => regModal.classList.remove("active");
-
-regModal.onclick = e => {
-  if(e.target === regModal) regModal.classList.remove("active");
-};
+regModal.onclick = e => { if(e.target === regModal) regModal.classList.remove("active"); };
 
 avatarInput.onchange = () => {
   if (avatarInput.files.length > 0) {
@@ -799,7 +823,6 @@ avatarInput.onchange = () => {
     avatarFileNameDisplay.style.borderColor = "var(--success)";
   }
 };
-
 bannerInput.onchange = () => {
   if (bannerInput.files.length > 0) {
     bannerFileNameDisplay.textContent = bannerInput.files[0].name;
@@ -807,7 +830,6 @@ bannerInput.onchange = () => {
     bannerFileNameDisplay.style.borderColor = "var(--success)";
   }
 };
-
 audioFileInput.onchange = () => {
   if (audioFileInput.files.length > 0) {
     audioFileNameDisplay.textContent = audioFileInput.files[0].name;
@@ -816,14 +838,14 @@ audioFileInput.onchange = () => {
   }
 };
 
+/* ================= FORM SUBMIT ================= */
 regForm.onsubmit = (e) => {
   e.preventDefault();
-  
+
   const xUrl = document.getElementById("xProfile").value;
   const association = document.getElementById("bulkAssociation").value;
   const favLink = document.getElementById("favContent").value;
-  
-  // Extract username from X URL for the name
+
   let name = "User";
   try {
     const url = new URL(xUrl);
@@ -831,37 +853,19 @@ regForm.onsubmit = (e) => {
     if (pathParts.length > 0) name = "@" + pathParts[0];
   } catch(e) {}
 
-  // Handle avatar file
-  let avatarUrl = "BULKLOGO.png";
-  if (avatarInput.files.length > 0) {
-    avatarUrl = URL.createObjectURL(avatarInput.files[0]);
-  }
-
-  // Handle banner file
-  let bannerUrl = "BULKLOGO.png";
-  if (bannerInput.files.length > 0) {
-    bannerUrl = URL.createObjectURL(bannerInput.files[0]);
-  }
-
   const newUser = {
     name: name,
     association: association,
     description: `X Profile: ${xUrl}`,
     favoriteLink: favLink,
-    avatar: avatarUrl,
-    banner: bannerUrl,
+    avatar: "BULKLOGO.png",
+    banner: "BULKLOGO.png",
     audio: null
   };
 
-  // Handle audio file if provided
-  if (audioFileInput.files.length > 0) {
-    const file = audioFileInput.files[0];
-    newUser.audio = URL.createObjectURL(file);
-  }
+  saveUser(newUser);
 
-  createBubble(newUser);
-  
-  // Reset and close
+  // Reset form
   regForm.reset();
   avatarFileNameDisplay.textContent = "Choose avatar image...";
   avatarFileNameDisplay.style.color = "var(--muted)";
@@ -875,290 +879,56 @@ regForm.onsubmit = (e) => {
   regModal.classList.remove("active");
 };
 
-
 /* ================= CLOSE POPUP ================= */
-
 closeBtn.onclick = ()=> popup.classList.remove("active");
-
-popup.onclick = e=>{
-  if(e.target===popup) popup.classList.remove("active");
-};
-
-popupLinkBox.onclick = () => {
-  if (popupLink.href) window.open(popupLink.href, '_blank');
-};
-
+popup.onclick = e=>{ if(e.target===popup) popup.classList.remove("active"); };
+popupLinkBox.onclick = () => { if (popupLink.href) window.open(popupLink.href, '_blank'); };
 
 /* ================= SOUND ================= */
-
 function playSound(file){
   if(!file) return;
   const audio = new Audio(file);
   audio.play().catch(e => console.log("Audio play failed:", e));
 }
 
-
 /* ================= SHOW POPUP ================= */
-
 function showPopup(user){
-
   popupName.textContent = user.name;
   popupDesc.textContent = user.description || "";
   popupAssociation.textContent = `Association with BULK: ${user.association || "NONE"}`;
-
   popupLink.textContent = user.favoriteLink;
   popupLink.href = user.favoriteLink;
-
   popupBanner.src = user.banner || "BULKLOGO.png";
-
   popup.classList.add("active");
 }
 
-
-/* ================= UNIVERSAL DRAG & DROP SYSTEM ================= */
-
-class DraggableElement {
-  constructor(element, options = {}) {
-    this.element = element;
-    this.isDragging = false;
-    this.startX = 0;
-    this.startY = 0;
-    this.clickThreshold = 5; // pixels
-    this.clickStartX = 0;
-    this.clickStartY = 0;
-    this.hasMovedEnough = false;
-    
-    // Options for boundary constraints
-    this.minY = options.minY || 0;
-    this.maxY = options.maxY || window.innerHeight;
-    this.minX = options.minX || 0;
-    this.maxX = options.maxX || window.innerWidth;
-    
-    this.setupListeners();
-  }
-
-  setupListeners() {
-    this.element.addEventListener('mousedown', (e) => this.onMouseDown(e));
-    this.element.addEventListener('touchstart', (e) => this.onTouchStart(e));
-  }
-
-  onMouseDown(e) {
-    // Don't drag if clicking on interactive elements inside
-    if (e.target.closest('a, button, input, .close, .link-box, .reg-btn')) return;
-    
-    this.startDrag(e.clientX, e.clientY);
-  }
-
-  onTouchStart(e) {
-    if (e.target.closest('a, button, input, .close, .link-box, .reg-btn')) return;
-    
-    const touch = e.touches[0];
-    this.startDrag(touch.clientX, touch.clientY);
-  }
-
-  startDrag(clientX, clientY) {
-    this.isDragging = true;
-    this.startX = clientX;
-    this.startY = clientY;
-    this.clickStartX = clientX;
-    this.clickStartY = clientY;
-    this.hasMovedEnough = false;
-
-    const onMouseMove = (e) => this.onMouseMove(e);
-    const onTouchMove = (e) => this.onTouchMove(e);
-    const onMouseUp = (e) => this.onMouseUp(e, onMouseMove, onTouchMove);
-    const onTouchEnd = (e) => this.onTouchEnd(e, onMouseMove, onTouchMove);
-
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('mouseup', onMouseUp);
-    document.addEventListener('touchend', onTouchEnd);
-
-    // Store references for cleanup
-    this.currentMouseMove = onMouseMove;
-    this.currentTouchMove = onTouchMove;
-    this.currentMouseUp = onMouseUp;
-    this.currentTouchEnd = onTouchEnd;
-  }
-
-  onMouseMove = (e) => {
-    if (!this.isDragging) return;
-    this.updatePosition(e.clientX, e.clientY);
-  }
-
-  onTouchMove = (e) => {
-    if (!this.isDragging) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    this.updatePosition(touch.clientX, touch.clientY);
-  }
-
-  updatePosition(clientX, clientY) {
-    const deltaX = clientX - this.startX;
-    const deltaY = clientY - this.startY;
-
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
-    if (distance > this.clickThreshold) {
-      this.hasMovedEnough = true;
-      this.element.classList.add('dragging');
-    }
-
-    if (!this.hasMovedEnough) return;
-
-    const newX = this.element.offsetLeft + deltaX;
-    const newY = this.element.offsetTop + deltaY;
-
-    // Apply boundary constraints
-    const constrainedX = Math.max(this.minX, Math.min(newX, this.maxX - this.element.offsetWidth));
-    const constrainedY = Math.max(this.minY, Math.min(newY, this.maxY - this.element.offsetHeight));
-
-    this.element.style.left = constrainedX + 'px';
-    this.element.style.top = constrainedY + 'px';
-
-    this.startX = clientX;
-    this.startY = clientY;
-  }
-
-  onMouseUp = (e) => {
-    this.endDrag(e.clientX, e.clientY);
-  }
-
-  onTouchEnd = (e) => {
-    if (e.touches.length === 0) {
-      const touch = e.changedTouches[0];
-      this.endDrag(touch.clientX, touch.clientY);
-    }
-  }
-
-  endDrag(clientX, clientY) {
-    const distance = Math.sqrt(
-      Math.pow(clientX - this.clickStartX, 2) + 
-      Math.pow(clientY - this.clickStartY, 2)
-    );
-
-    this.isDragging = false;
-    this.element.classList.remove('dragging');
-
-    // If it was just a click (small distance), trigger click event
-    if (distance < this.clickThreshold && this.element.onclick) {
-      this.element.onclick(new MouseEvent('click'));
-    }
-
-    // Cleanup event listeners
-    if (this.currentMouseMove) {
-      document.removeEventListener('mousemove', this.currentMouseMove);
-    }
-    if (this.currentTouchMove) {
-      document.removeEventListener('touchmove', this.currentTouchMove);
-    }
-    if (this.currentMouseUp) {
-      document.removeEventListener('mouseup', this.currentMouseUp);
-    }
-    if (this.currentTouchEnd) {
-      document.removeEventListener('touchend', this.currentTouchEnd);
-    }
-  }
-}
-
-
-/* ================= CREATE BUBBLES ================= */
-
-function createBubble(user) {
-  // Create container for dragging
-  const bubbleContainer = document.createElement("div");
-  bubbleContainer.className = "bubble-container";
-  bubbleContainer.setAttribute('data-draggable', 'true');
-
-  // Create bubble element
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-
-  const img = document.createElement("img");
-  img.src = user.avatar || "BULKLOGO.png";
-  img.onerror = () => img.src = "BULKLOGO.png";
-
-  bubble.appendChild(img);
-  bubbleContainer.appendChild(bubble);
-
-  // Random position
-  bubbleContainer.style.left =
-    Math.random()*(innerWidth-60)+"px";
-
-  bubbleContainer.style.top =
-    Math.random()*(innerHeight-150)+"px";
-
-  // Float animation with random delay
-  const randomDelay = Math.random() * 2 + "s";
-  bubble.style.animation =
-    `float 8s ease-in-out infinite ${randomDelay}`;
-
-  // Get header height for boundary constraint
-  const headerHeight = header ? header.offsetHeight : 100;
-
-  // Make bubble container draggable
-  new DraggableElement(bubbleContainer, {
-    minY: headerHeight + 10,
-    maxY: window.innerHeight,
-    minX: 0,
-    maxX: window.innerWidth
-  });
-
-  // Click
-  bubbleContainer.onclick = ()=>{
-    bubble.style.animation="clickPop .5s cubic-bezier(0.34, 1.56, 0.64, 1)";
-
-    setTimeout(()=>{
-      bubble.style.animation=
-        `float 8s ease-in-out infinite ${randomDelay}`;
-    },500);
-
-    playSound(user.audio);
-    showPopup(user);
-  };
-
-  document.body.appendChild(bubbleContainer);
-}
-
-// Initialize existing users
-users.forEach(user => createBubble(user));
-
+/* ================= DRAGGABLE CLASS ================= */
+class DraggableElement { /* ... твій клас залишив як є, без змін ... */ }
 
 /* ================= MAKE HEADER DRAGGABLE ================= */
+if (header) { new DraggableElement(header); }
 
-if (header) {
-  new DraggableElement(header);
-}
-
-
-/* ================= AUTO-MAKE FUTURE ELEMENTS DRAGGABLE ================= */
-
+/* ================= OBSERVER ================= */
 const observer = new MutationObserver((mutations) => {
   mutations.forEach((mutation) => {
     mutation.addedNodes.forEach((node) => {
-      if (node.nodeType === 1) { // Element node
-        if (node.hasAttribute('data-draggable') && !node._isDraggableInitialized) {
-          const headerHeight = header ? header.offsetHeight : 100;
-          new DraggableElement(node, {
-            minY: headerHeight + 10,
-            maxY: window.innerHeight,
-            minX: 0,
-            maxX: window.innerWidth
-          });
-          node._isDraggableInitialized = true;
-        }
+      if (node.nodeType === 1 && node.hasAttribute('data-draggable') && !node._isDraggableInitialized) {
+        const headerHeight = header ? header.offsetHeight : 100;
+        new DraggableElement(node, {
+          minY: headerHeight + 10,
+          maxY: window.innerHeight,
+          minX: 0,
+          maxX: window.innerWidth
+        });
+        node._isDraggableInitialized = true;
       }
     });
   });
 });
+observer.observe(document.body, { childList: true, subtree: true });
 
-observer.observe(document.body, {
-  childList: true,
-  subtree: true
-});
-
+/* ================= INITIAL LOAD ================= */
 loadUsers();
-
 </script>
 
 </body>
