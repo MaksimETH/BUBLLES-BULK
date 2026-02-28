@@ -706,7 +706,6 @@ body::before {
   </div>
 </div>
 
-
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -743,14 +742,6 @@ async function loadUsers() {
 async function saveUser(user) {
   await db.collection("users").add(user);
   loadUsers();
-}
-
-async function uploadFile(file, folder) {
-  const fileName = Date.now() + "_" + file.name;
-  const storageRef = storage.ref(`${folder}/${fileName}`);
-  await storageRef.put(file);
-  const url = await storageRef.getDownloadURL();
-  return url;
 }
 
 /* ====================== CREATE BUBBLES ================= */
@@ -849,35 +840,35 @@ audioFileInput.onchange = () => {
 };
 
 /* ================= FORM SUBMIT ================= */
-/* ================= FORM SUBMIT ================= */
-regForm.onsubmit = async (e) => { // Додали async, щоб чекати завантаження
+regForm.onsubmit = async (e) => {
   e.preventDefault();
 
-  // 1. Отримуємо файл з інпуту
- const avatarFile = avatarInput.files[0]; 
-  let avatarUrl = "BULKLOGO.png"; // Стандартне лого за замовчуванням
+  const avatarFile = avatarInput.files[0];
+  let avatarUrl = "BULKLOGO.png"; // default
 
-     if (avatarFile) {
-      const formData = new FormData();
-      formData.append("file", avatarFile);
-      formData.append("upload_preset", "ml_default");
+  // Upload avatar to Cloudinary
+  if (avatarFile) {
+    const formData = new FormData();
+    formData.append("file", avatarFile);
+    formData.append("upload_preset", "ml_default");
 
-      try {
-        const response = await fetch("https://api.cloudinary.com/v1_1/dx2pdcacp/upload", {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await response.json();
-        if (data.secure_url) {
-            avatarUrl = data.secure_url; // Отримуємо пряме посилання на картинку
-        }
-      } catch (err) {
-        console.error("Cloudinary Error:", err);
+    try {
+      const response = await fetch("https://api.cloudinary.com/v1_1/dx2pdcacp/upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await response.json();
+      console.log("Cloudinary response:", data);
+      if (data.secure_url) {
+        avatarUrl = data.secure_url;
+      } else if (data.error) {
+        console.error("Cloudinary upload error:", data.error.message);
       }
+    } catch (err) {
+      console.error("Fetch Cloudinary failed:", err);
     }
+  }
 
-  // 3. Створюємо об'єкт (твоя стара логіка)
   const xUrl = document.getElementById("xProfile").value;
   const association = document.getElementById("bulkAssociation").value;
   const favLink = document.getElementById("favContent").value;
@@ -890,19 +881,16 @@ regForm.onsubmit = async (e) => { // Додали async, щоб чекати з�
   } catch(e) {}
 
   const newUser = {
-    name: name,
-    association: association,
+    name,
+    association,
     description: `X Profile: ${xUrl}`,
     favoriteLink: favLink,
-    avatar: avatarUrl, // Тепер тут буде або лінк з хмари, або BULKLOGO.png
+    avatar: avatarUrl, // secure_url або BULKLOGO.png
     banner: "BULKLOGO.png",
     audio: null
   };
 
-  saveUser(newUser); // Зберігаємо в Firebase Firestore
-  
-  // Далі йде твій код з ресетом форми...
-
+  await saveUser(newUser);
 
   // Reset form
   regForm.reset();
@@ -968,6 +956,7 @@ observer.observe(document.body, { childList: true, subtree: true });
 
 /* ================= INITIAL LOAD ================= */
 loadUsers();
+
 </script>
 </body>
 </html>
