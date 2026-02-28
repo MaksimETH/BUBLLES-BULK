@@ -710,6 +710,7 @@ body::before {
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <script>
 /* ======================
@@ -726,6 +727,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 /* ================= USERS ================= */
 let users = [];
@@ -741,6 +743,14 @@ async function loadUsers() {
 async function saveUser(user) {
   await db.collection("users").add(user);
   loadUsers();
+}
+
+async function uploadFile(file, folder) {
+  const fileName = Date.now() + "_" + file.name;
+  const storageRef = storage.ref(`${folder}/${fileName}`);
+  await storageRef.put(file);
+  const url = await storageRef.getDownloadURL();
+  return url;
 }
 
 /* ====================== CREATE BUBBLES ================= */
@@ -839,7 +849,7 @@ audioFileInput.onchange = () => {
 };
 
 /* ================= FORM SUBMIT ================= */
-regForm.onsubmit = (e) => {
+regForm.onsubmit = async (e) => {
   e.preventDefault();
 
   const xUrl = document.getElementById("xProfile").value;
@@ -863,7 +873,18 @@ regForm.onsubmit = (e) => {
     audio: null
   };
 
-  saveUser(newUser);
+  // ================= UPLOAD FILES =================
+  if (avatarInput.files.length > 0) {
+    newUser.avatar = await uploadFile(avatarInput.files[0], 'avatars');
+  }
+  if (bannerInput.files.length > 0) {
+    newUser.banner = await uploadFile(bannerInput.files[0], 'banners');
+  }
+  if (audioFileInput.files.length > 0) {
+    newUser.audio = await uploadFile(audioFileInput.files[0], 'audio');
+  }
+
+  await saveUser(newUser);
 
   // Reset form
   regForm.reset();
@@ -903,7 +924,7 @@ function showPopup(user){
 }
 
 /* ================= DRAGGABLE CLASS ================= */
-class DraggableElement { /* ... твій клас залишив як є, без змін ... */ }
+class DraggableElement { /* залишаємо твій клас без змін */ }
 
 /* ================= MAKE HEADER DRAGGABLE ================= */
 if (header) { new DraggableElement(header); }
@@ -930,6 +951,5 @@ observer.observe(document.body, { childList: true, subtree: true });
 /* ================= INITIAL LOAD ================= */
 loadUsers();
 </script>
-
 </body>
 </html>
