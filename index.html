@@ -705,7 +705,6 @@ body::before {
     <div class="close" id="closeRegBtn">Cancel</div>
   </div>
 </div>
-
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -839,35 +838,40 @@ audioFileInput.onchange = () => {
   }
 };
 
+/* ================= CLOUDINARY UPLOAD FUNCTION ================= */
+async function uploadToCloudinary(file) {
+  if (!file) return null;
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "ml_default");
+
+  try {
+    const response = await fetch("https://api.cloudinary.com/v1_1/dx2pdcacp/upload", {
+      method: "POST",
+      body: formData
+    });
+    const data = await response.json();
+    console.log("Cloudinary upload response:", data);
+    if (data.secure_url) return data.secure_url;
+    else {
+      console.error("Cloudinary upload error:", data.error?.message);
+      return null;
+    }
+  } catch (err) {
+    console.error("Cloudinary fetch failed:", err);
+    return null;
+  }
+}
+
 /* ================= FORM SUBMIT ================= */
 regForm.onsubmit = async (e) => {
   e.preventDefault();
 
-  const avatarFile = avatarInput.files[0];
-  let avatarUrl = "BULKLOGO.png"; // default
-
-  // Upload avatar to Cloudinary
-  if (avatarFile) {
-    const formData = new FormData();
-    formData.append("file", avatarFile);
-    formData.append("upload_preset", "ml_default");
-
-    try {
-      const response = await fetch("https://api.cloudinary.com/v1_1/dx2pdcacp/upload", {
-        method: "POST",
-        body: formData
-      });
-      const data = await response.json();
-      console.log("Cloudinary response:", data);
-      if (data.secure_url) {
-        avatarUrl = data.secure_url;
-      } else if (data.error) {
-        console.error("Cloudinary upload error:", data.error.message);
-      }
-    } catch (err) {
-      console.error("Fetch Cloudinary failed:", err);
-    }
-  }
+  // Завантажуємо файли на Cloudinary
+  const avatarUrl = await uploadToCloudinary(avatarInput.files[0]) || "BULKLOGO.png";
+  const bannerUrl = await uploadToCloudinary(bannerInput.files[0]) || "BULKLOGO.png";
+  const audioUrl = await uploadToCloudinary(audioFileInput.files[0]) || null;
 
   const xUrl = document.getElementById("xProfile").value;
   const association = document.getElementById("bulkAssociation").value;
@@ -885,9 +889,9 @@ regForm.onsubmit = async (e) => {
     association,
     description: `X Profile: ${xUrl}`,
     favoriteLink: favLink,
-    avatar: avatarUrl, // secure_url або BULKLOGO.png
-    banner: "BULKLOGO.png",
-    audio: null
+    avatar: avatarUrl,
+    banner: bannerUrl,
+    audio: audioUrl
   };
 
   await saveUser(newUser);
@@ -956,7 +960,6 @@ observer.observe(document.body, { childList: true, subtree: true });
 
 /* ================= INITIAL LOAD ================= */
 loadUsers();
-
 </script>
 </body>
 </html>
