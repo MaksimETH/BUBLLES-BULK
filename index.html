@@ -47,7 +47,6 @@ body {
 
 
 
-
 /* Animated background gradient */
 body::before {
   content: '';
@@ -498,7 +497,6 @@ body::before {
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-weight: 600;
 }
 
 .form-group input, .form-group textarea {
@@ -852,9 +850,7 @@ async function uploadToCloudinary(file) {
       body: formData
     });
     const data = await response.json();
-    if (data.secure_url) return data.secure_url;
-    console.error("Cloudinary upload error:", data.error?.message);
-    return null;
+    return data.secure_url || null;
   } catch (err) {
     console.error("Cloudinary fetch failed:", err);
     return null;
@@ -940,7 +936,80 @@ function showPopup(user){
 }
 
 /* ================= DRAGGABLE CLASS ================= */
-class DraggableElement { /* залишаємо твій клас без змін */ }
+class DraggableElement {
+  constructor(element, options = {}) {
+    this.element = element;
+    this.options = {
+      minX: options.minX || 0,
+      maxX: options.maxX || window.innerWidth,
+      minY: options.minY || 0,
+      maxY: options.maxY || window.innerHeight,
+    };
+
+    this.isDragging = false;
+    this.offsetX = 0;
+    this.offsetY = 0;
+
+    this.element.addEventListener('mousedown', (e) => this.onMouseDown(e));
+    this.element.addEventListener('touchstart', (e) => this.onTouchStart(e));
+  }
+
+  onMouseDown(e) {
+    if (e.button !== 0) return;
+    this.startDrag(e.clientX, e.clientY);
+  }
+
+  onTouchStart(e) {
+    if (e.touches.length !== 1) return;
+    this.startDrag(e.touches[0].clientX, e.touches[0].clientY);
+  }
+
+  startDrag(clientX, clientY) {
+    this.isDragging = true;
+    this.element.classList.add('dragging');
+
+    const rect = this.element.getBoundingClientRect();
+    this.offsetX = clientX - rect.left;
+    this.offsetY = clientY - rect.top;
+
+    document.addEventListener('mousemove', (e) => this.onMouseMove(e));
+    document.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+    document.addEventListener('mouseup', () => this.stopDrag());
+    document.addEventListener('touchend', () => this.stopDrag());
+  }
+
+  onMouseMove(e) {
+    if (!this.isDragging) return;
+    this.updatePosition(e.clientX, e.clientY);
+  }
+
+  onTouchMove(e) {
+    if (!this.isDragging) return;
+    e.preventDefault();
+    this.updatePosition(e.touches[0].clientX, e.touches[0].clientY);
+  }
+
+  updatePosition(clientX, clientY) {
+    let x = clientX - this.offsetX;
+    let y = clientY - this.offsetY;
+
+    x = Math.max(this.options.minX, Math.min(x, this.options.maxX - this.element.offsetWidth));
+    y = Math.max(this.options.minY, Math.min(y, this.options.maxY - this.element.offsetHeight));
+
+    this.element.style.left = x + 'px';
+    this.element.style.top = y + 'px';
+  }
+
+  stopDrag() {
+    this.isDragging = false;
+    this.element.classList.remove('dragging');
+
+    document.removeEventListener('mousemove', (e) => this.onMouseMove(e));
+    document.removeEventListener('touchmove', (e) => this.onTouchMove(e));
+    document.removeEventListener('mouseup', () => this.stopDrag());
+    document.removeEventListener('touchend', () => this.stopDrag());
+  }
+}
 
 /* ================= MAKE HEADER DRAGGABLE ================= */
 if (header) { new DraggableElement(header); }
