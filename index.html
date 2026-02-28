@@ -849,9 +849,35 @@ audioFileInput.onchange = () => {
 };
 
 /* ================= FORM SUBMIT ================= */
-regForm.onsubmit = async (e) => {
+/* ================= FORM SUBMIT ================= */
+regForm.onsubmit = async (e) => { // Додали async, щоб чекати завантаження
   e.preventDefault();
 
+  // 1. Отримуємо файл з інпуту
+  const avatarFile = avatarInput.files[0]; 
+  let avatarUrl = "BULKLOGO.png"; // Стандартне лого за замовчуванням
+
+     if (avatarFile) {
+      const formData = new FormData();
+      formData.append("file", avatarFile); 
+      formData.append("upload_preset", "ml_default");
+
+      try {
+        const response = await fetch("https://api.cloudinary.com", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+        if (data.secure_url) {
+            avatarUrl = data.secure_url; // Отримуємо пряме посилання на картинку
+        }
+      } catch (err) {
+        console.error("Cloudinary Error:", err);
+      }
+    }
+
+  // 3. Створюємо об'єкт (твоя стара логіка)
   const xUrl = document.getElementById("xProfile").value;
   const association = document.getElementById("bulkAssociation").value;
   const favLink = document.getElementById("favContent").value;
@@ -868,23 +894,15 @@ regForm.onsubmit = async (e) => {
     association: association,
     description: `X Profile: ${xUrl}`,
     favoriteLink: favLink,
-    avatar: "BULKLOGO.png",
+    avatar: avatarUrl, // Тепер тут буде або лінк з хмари, або BULKLOGO.png
     banner: "BULKLOGO.png",
     audio: null
   };
 
-  // ================= UPLOAD FILES =================
-  if (avatarInput.files.length > 0) {
-    newUser.avatar = await uploadFile(avatarInput.files[0], 'avatars');
-  }
-  if (bannerInput.files.length > 0) {
-    newUser.banner = await uploadFile(bannerInput.files[0], 'banners');
-  }
-  if (audioFileInput.files.length > 0) {
-    newUser.audio = await uploadFile(audioFileInput.files[0], 'audio');
-  }
+  saveUser(newUser); // Зберігаємо в Firebase Firestore
+  
+  // Далі йде твій код з ресетом форми...
 
-  await saveUser(newUser);
 
   // Reset form
   regForm.reset();
