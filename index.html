@@ -707,23 +707,55 @@ body::before {
 </div>
 
 
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
+
+  /* ======================
+   FIREBASE CONFIG
+====================== */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC__ALr7FQOqktW6S3nbYVz1qQfoJb1sRM",
+  authDomain: "bubbles-bulk.firebaseapp.com",
+  projectId: "bubbles-bulk",
+  storageBucket: "bubbles-bulk.firebasestorage.app",
+  messagingSenderId: "230626692074",
+  appId: "1:230626692074:web:d438e0dbfb3a1a57e64093"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
 
 /* ================= USERS ================= */
 
-const users = [
+let users = [];
 
-  {
-    name: "Crypost",
-    association: "SPEED",
-    description: "Passionate about high-speed transactions and community growth.",
-    favoriteLink: "https://x.com/lamaCryp/status/2026645277881377145?s=20",
-    avatar: "Crypostlogo.jpg",
-    banner: "crypostbanner.jpg",
-    audio: "crypost.mp3"
-  }
+/* ======================
+   LOAD FROM FIREBASE
+====================== */
 
-];
+async function saveUser(user) {
+
+  await db.collection("users").add(user);
+
+  loadUsers();
+}
+
+//////////
+
+function createAllBubbles() {
+
+  document.querySelectorAll(".bubble").forEach(b => b.remove());
+
+  users.forEach(user => {
+    createBubble(user);
+  });
+
+}
 
 
 /* ================= ELEMENTS ================= */
@@ -1124,6 +1156,8 @@ observer.observe(document.body, {
   childList: true,
   subtree: true
 });
+
+loadUsers();
 
 </script>
 
