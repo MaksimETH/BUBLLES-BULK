@@ -863,7 +863,7 @@ regForm.onsubmit = async (e) => { // Додали async, щоб чекати з�
       formData.append("upload_preset", "ml_default");
 
       try {
-        const response = await fetch("https://api.cloudinary.com", {
+        const response = await fetch("https://api.cloudinary.com/v1_1/dx2pdcacp/upload", {
           method: "POST",
           body: formData
         });
