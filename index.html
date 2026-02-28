@@ -852,12 +852,9 @@ async function uploadToCloudinary(file) {
       body: formData
     });
     const data = await response.json();
-    console.log("Cloudinary upload response:", data);
     if (data.secure_url) return data.secure_url;
-    else {
-      console.error("Cloudinary upload error:", data.error?.message);
-      return null;
-    }
+    console.error("Cloudinary upload error:", data.error?.message);
+    return null;
   } catch (err) {
     console.error("Cloudinary fetch failed:", err);
     return null;
@@ -868,7 +865,7 @@ async function uploadToCloudinary(file) {
 regForm.onsubmit = async (e) => {
   e.preventDefault();
 
-  // Завантажуємо файли на Cloudinary
+  // Завантажуємо всі файли на Cloudinary
   const avatarUrl = await uploadToCloudinary(avatarInput.files[0]) || "BULKLOGO.png";
   const bannerUrl = await uploadToCloudinary(bannerInput.files[0]) || "BULKLOGO.png";
   const audioUrl = await uploadToCloudinary(audioFileInput.files[0]) || null;
@@ -929,7 +926,16 @@ function showPopup(user){
   popupAssociation.textContent = `Association with BULK: ${user.association || "NONE"}`;
   popupLink.textContent = user.favoriteLink;
   popupLink.href = user.favoriteLink;
-  popupBanner.src = user.banner || "BULKLOGO.png";
+
+  // банер відображається як src для <img>
+  if (popupBanner.tagName === "IMG") {
+    popupBanner.src = user.banner || "BULKLOGO.png";
+  } else {
+    popupBanner.style.backgroundImage = `url(${user.banner || "BULKLOGO.png"})`;
+    popupBanner.style.backgroundSize = "cover";
+    popupBanner.style.backgroundPosition = "center";
+  }
+
   popup.classList.add("active");
 }
 
