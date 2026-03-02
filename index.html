@@ -10,12 +10,6 @@
 
 <style>
 
-  /* ================= CUSTOM CURSOR ================= */
-
- /*
-
-/* ================= ROOT ================= */
-
 :root {
   --bg: #1B1A14;
   --accent: #2473db;
@@ -28,7 +22,6 @@
   --success: #10b981;
 }
 
-/* ================= BODY ================= */
 
 body {
   margin: 0;
@@ -46,8 +39,6 @@ body {
 
 
 
-
-/* Animated background gradient */
 body::before {
   content: '';
   position: fixed;
@@ -61,7 +52,7 @@ body::before {
   z-index: 1;
 }
 
-/* ================= HEADER ================= */
+
 
 .header {
   padding: 24px 20px;
@@ -97,7 +88,6 @@ body::before {
   transform: scale(1.05);
 }
 
-/* ================= REGISTRATION BUTTON ================= */
 
 .reg-btn {
   position: absolute;
@@ -121,7 +111,7 @@ body::before {
   box-shadow: 0 6px 20px rgba(36, 115, 219, 0.4);
 }
 
-/* ================= BUBBLE CONTAINER ================= */
+
 
 .bubble-container {
   position: absolute;
@@ -140,7 +130,7 @@ body::before {
   z-index: 1000;
 }
 
-/* ================= BUBBLE ================= */
+
 
 .bubble {
   width: 100%;
@@ -194,7 +184,7 @@ body::before {
   transform: scale(1.1);
 }
 
-/* ================= ANIMATIONS ================= */
+
 
 @keyframes float {
   0%, 100% { 
@@ -220,7 +210,7 @@ body::before {
   }
 }
 
-/* ================= POPUP & MODAL ================= */
+
 
 .popup, .modal {
   position: fixed;
@@ -273,7 +263,6 @@ body::before {
   pointer-events: none;
 }
 
-/* Banner */
 
 .popup-banner {
   width: 100%;
@@ -290,7 +279,7 @@ body::before {
   transform: scale(1.02);
 }
 
-/* Text */
+
 
 .association {
   font-size: 0.7rem;
@@ -328,7 +317,6 @@ body::before {
   font-weight: 600;
 }
 
-/* ================= LINK BOX ================= */
 
 .link-box {
   background: linear-gradient(135deg,
@@ -441,7 +429,6 @@ body::before {
   transform: translate(2px, -2px);
 }
 
-/* Close */
 
 .close {
   margin-top: 20px;
@@ -477,7 +464,6 @@ body::before {
   width: 30px;
 }
 
-/* ================= FORM STYLES ================= */
 
 .modal-title {
   font-size: 1.5rem;
@@ -602,7 +588,6 @@ body::before {
 
 <body>
 
-<!-- HEADER -->
 
 <header class="header" data-draggable="true">
   <img src="BULKLOGO.png" class="logo">
@@ -610,7 +595,6 @@ body::before {
 </header>
 
 
-<!-- POPUP -->
 
 <div class="popup" id="popup">
 
@@ -651,7 +635,6 @@ body::before {
 
 </div>
 
-<!-- REGISTRATION MODAL -->
 
 <div class="modal" id="regModal">
   <div class="modal-card">
@@ -703,15 +686,13 @@ body::before {
     <div class="close" id="closeRegBtn">Cancel</div>
   </div>
 </div>
-<!-- FIREBASE -->
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <script>
-/* ======================
-   FIREBASE CONFIG
-====================== */
+
 const firebaseConfig = {
   apiKey: "AIzaSyC__ALr7FQOqktW6S3nbYVz1qQfoJb1sRM",
   authDomain: "bubbles-bulk.firebaseapp.com",
@@ -725,10 +706,10 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-/* ================= USERS ================= */
+
 let users = [];
 
-/* ====================== FIREBASE FUNCTIONS ================= */
+
 async function loadUsers() {
   const snapshot = await db.collection("users").get();
   users = [];
@@ -741,7 +722,7 @@ async function saveUser(user) {
   loadUsers();
 }
 
-/* ====================== CREATE BUBBLES ================= */
+
 function createAllBubbles() {
   document.querySelectorAll(".bubble-container").forEach(b => b.remove());
   users.forEach(user => createBubble(user));
@@ -786,7 +767,7 @@ function createBubble(user) {
   document.body.appendChild(bubbleContainer);
 }
 
-/* ================= ELEMENTS ================= */
+
 const popup = document.getElementById("popup");
 const popupName = document.getElementById("popupName");
 const popupDesc = document.getElementById("popupDesc");
@@ -809,7 +790,7 @@ const audioFileNameDisplay = document.getElementById("audioFileName");
 
 const header = document.querySelector('.header');
 
-/* ================= MODAL LOGIC ================= */
+
 openRegBtn.onclick = () => regModal.classList.add("active");
 closeRegBtn.onclick = () => regModal.classList.remove("active");
 regModal.onclick = e => { if(e.target === regModal) regModal.classList.remove("active"); };
@@ -836,7 +817,7 @@ audioFileInput.onchange = () => {
   }
 };
 
-/* ================= CLOUDINARY UPLOAD FUNCTION ================= */
+
 async function uploadToCloudinary(file) {
   if (!file) return null;
 
@@ -857,11 +838,11 @@ async function uploadToCloudinary(file) {
   }
 }
 
-/* ================= FORM SUBMIT ================= */
+
 regForm.onsubmit = async (e) => {
   e.preventDefault();
 
-  // Завантажуємо всі файли на Cloudinary
+
   const avatarUrl = await uploadToCloudinary(avatarInput.files[0]) || "BULKLOGO.png";
   const bannerUrl = await uploadToCloudinary(bannerInput.files[0]) || "BULKLOGO.png";
   const audioUrl = await uploadToCloudinary(audioFileInput.files[0]) || null;
@@ -903,19 +884,19 @@ regForm.onsubmit = async (e) => {
   regModal.classList.remove("active");
 };
 
-/* ================= CLOSE POPUP ================= */
+
 closeBtn.onclick = ()=> popup.classList.remove("active");
 popup.onclick = e=>{ if(e.target===popup) popup.classList.remove("active"); };
 popupLinkBox.onclick = () => { if (popupLink.href) window.open(popupLink.href, '_blank'); };
 
-/* ================= SOUND ================= */
+
 function playSound(file){
   if(!file) return;
   const audio = new Audio(file);
   audio.play().catch(e => console.log("Audio play failed:", e));
 }
 
-/* ================= SHOW POPUP ================= */
+
 function showPopup(user){
   popupName.textContent = user.name;
   popupDesc.textContent = user.description || "";
@@ -923,7 +904,7 @@ function showPopup(user){
   popupLink.textContent = user.favoriteLink;
   popupLink.href = user.favoriteLink;
 
-  // банер відображається як src для <img>
+
   if (popupBanner.tagName === "IMG") {
     popupBanner.src = user.banner || "BULKLOGO.png";
   } else {
@@ -935,7 +916,7 @@ function showPopup(user){
   popup.classList.add("active");
 }
 
-/* ================= DRAGGABLE CLASS ================= */
+
 class DraggableElement {
   constructor(element, options = {}) {
     this.element = element;
@@ -1011,10 +992,10 @@ class DraggableElement {
   }
 }
 
-/* ================= MAKE HEADER DRAGGABLE ================= */
+
 if (header) { new DraggableElement(header); }
 
-/* ================= OBSERVER ================= */
+
 const observer = new MutationObserver((mutations) => {
   mutations.forEach((mutation) => {
     mutation.addedNodes.forEach((node) => {
@@ -1033,7 +1014,6 @@ const observer = new MutationObserver((mutations) => {
 });
 observer.observe(document.body, { childList: true, subtree: true });
 
-/* ================= INITIAL LOAD ================= */
 loadUsers();
 </script>
 </body>
