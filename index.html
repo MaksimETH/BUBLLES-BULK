@@ -111,6 +111,11 @@ body::before {
   box-shadow: 0 6px 20px rgba(36, 115, 219, 0.4);
 }
 
+.reg-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
 
 
 .bubble-container {
@@ -141,6 +146,7 @@ body::before {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 0 0 rgba(36, 115, 219, 0.5);
   background: var(--card);
+  will-change: transform;
 }
 
 .bubble-container.dragging .bubble {
@@ -570,6 +576,20 @@ body::before {
   transform: translateY(0);
 }
 
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.bubble-limit-warning {
+  color: var(--success);
+  font-size: 0.8rem;
+  margin-top: 10px;
+  text-align: center;
+  font-weight: 500;
+}
+
 /* Animation */
 
 @keyframes popupShow {
@@ -680,7 +700,10 @@ body::before {
         </div>
       </div>
       
-      <button type="submit" class="submit-btn">Create Bubble</button>
+      <button type="submit" class="submit-btn" id="submitBtn">Create Bubble</button>
+      <div class="bubble-limit-warning" id="bubbleLimitWarning" style="display: none;">
+        Maximum 10 bubbles reached. Delete one to add a new bubble.
+      </div>
     </form>
     
     <div class="close" id="closeRegBtn">Cancel</div>
@@ -706,26 +729,41 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-
+// BUBBLE LIMIT CONSTANT
+const MAX_BUBBLES = 10;
 let users = [];
+let isCreatingBubble = false;
 
+// Debounce helper for click events
+function debounce(func, delay) {
+  let timeoutId;
+  return function(...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
+}
 
 async function loadUsers() {
   const snapshot = await db.collection("users").get();
   users = [];
   snapshot.forEach(doc => users.push(doc.data()));
   createAllBubbles();
+  updateBubbleLimit();
 }
 
 async function saveUser(user) {
+  if (users.length >= MAX_BUBBLES) {
+    alert(`Maximum ${MAX_BUBBLES} bubbles reached. Please delete one before adding a new bubble.`);
+    return;
+  }
   await db.collection("users").add(user);
-  loadUsers();
+  await loadUsers();
 }
-
 
 function createAllBubbles() {
   document.querySelectorAll(".bubble-container").forEach(b => b.remove());
-  users.forEach(user => createBubble(user));
+  // Only create bubbles up to the limit
+  users.slice(0, MAX_BUBBLES).forEach(user => createBubble(user));
 }
 
 function createBubble(user) {
@@ -757,16 +795,47 @@ function createBubble(user) {
     maxX: window.innerWidth
   });
 
-  bubbleContainer.onclick = ()=>{
-    bubble.style.animation="clickPop .5s cubic-bezier(0.34, 1.56, 0.64, 1)";
-    setTimeout(()=>{ bubble.style.animation = `float 8s ease-in-out infinite ${randomDelay}`; },500);
-    playSound(user.audio);
+  // Use requestAnimationFrame for smooth animation and debounce click
+  let isAnimating = false;
+  bubbleContainer.onclick = () => {
+    if (isAnimating) return; // Prevent multiple clicks during animation
+    
+    isAnimating = true;
+    bubble.style.animation = "clickPop .5s cubic-bezier(0.34, 1.56, 0.64, 1)";
+    
+    // Play sound asynchronously without blocking
+    if (user.audio) {
+      playSound(user.audio);
+    }
+    
+    // Show popup asynchronously
     showPopup(user);
+    
+    // Reset animation after completion
+    setTimeout(() => {
+      bubble.style.animation = `float 8s ease-in-out infinite ${randomDelay}`;
+      isAnimating = false;
+    }, 500);
   };
 
   document.body.appendChild(bubbleContainer);
 }
 
+function updateBubbleLimit() {
+  const warningEl = document.getElementById("bubbleLimitWarning");
+  const submitBtn = document.getElementById("submitBtn");
+  const openRegBtn = document.getElementById("openRegBtn");
+  
+  if (users.length >= MAX_BUBBLES) {
+    warningEl.style.display = "block";
+    submitBtn.disabled = true;
+    openRegBtn.disabled = true;
+  } else {
+    warningEl.style.display = "none";
+    submitBtn.disabled = false;
+    openRegBtn.disabled = false;
+  }
+}
 
 const popup = document.getElementById("popup");
 const popupName = document.getElementById("popupName");
@@ -842,46 +911,63 @@ async function uploadToCloudinary(file) {
 regForm.onsubmit = async (e) => {
   e.preventDefault();
 
+  // Check bubble limit before creating
+  if (users.length >= MAX_BUBBLES) {
+    alert(`Maximum ${MAX_BUBBLES} bubbles reached. Please delete one before adding a new bubble.`);
+    return;
+  }
 
-  const avatarUrl = await uploadToCloudinary(avatarInput.files[0]) || "BULKLOGO.png";
-  const bannerUrl = await uploadToCloudinary(bannerInput.files[0]) || "BULKLOGO.png";
-  const audioUrl = await uploadToCloudinary(audioFileInput.files[0]) || null;
+  const submitBtn = document.getElementById("submitBtn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Creating...";
 
-  const xUrl = document.getElementById("xProfile").value;
-  const association = document.getElementById("bulkAssociation").value;
-  const favLink = document.getElementById("favContent").value;
-
-  let name = "User";
   try {
-    const url = new URL(xUrl);
-    const pathParts = url.pathname.split('/').filter(p => p);
-    if (pathParts.length > 0) name = "@" + pathParts[0];
-  } catch(e) {}
+    const avatarUrl = await uploadToCloudinary(avatarInput.files[0]) || "BULKLOGO.png";
+    const bannerUrl = await uploadToCloudinary(bannerInput.files[0]) || "BULKLOGO.png";
+    const audioUrl = await uploadToCloudinary(audioFileInput.files[0]) || null;
 
-  const newUser = {
-    name,
-    association,
-    description: `X Profile: ${xUrl}`,
-    favoriteLink: favLink,
-    avatar: avatarUrl,
-    banner: bannerUrl,
-    audio: audioUrl
-  };
+    const xUrl = document.getElementById("xProfile").value;
+    const association = document.getElementById("bulkAssociation").value;
+    const favLink = document.getElementById("favContent").value;
 
-  await saveUser(newUser);
+    let name = "User";
+    try {
+      const url = new URL(xUrl);
+      const pathParts = url.pathname.split('/').filter(p => p);
+      if (pathParts.length > 0) name = "@" + pathParts[0];
+    } catch(e) {}
 
-  // Reset form
-  regForm.reset();
-  avatarFileNameDisplay.textContent = "Choose avatar image...";
-  avatarFileNameDisplay.style.color = "var(--muted)";
-  avatarFileNameDisplay.style.borderColor = "rgba(255, 255, 255, 0.2)";
-  bannerFileNameDisplay.textContent = "Choose banner image...";
-  bannerFileNameDisplay.style.color = "var(--muted)";
-  bannerFileNameDisplay.style.borderColor = "rgba(255, 255, 255, 0.2)";
-  audioFileNameDisplay.textContent = "Choose audio file...";
-  audioFileNameDisplay.style.color = "var(--muted)";
-  audioFileNameDisplay.style.borderColor = "rgba(255, 255, 255, 0.2)";
-  regModal.classList.remove("active");
+    const newUser = {
+      name,
+      association,
+      description: `X Profile: ${xUrl}`,
+      favoriteLink: favLink,
+      avatar: avatarUrl,
+      banner: bannerUrl,
+      audio: audioUrl
+    };
+
+    await saveUser(newUser);
+
+    // Reset form
+    regForm.reset();
+    avatarFileNameDisplay.textContent = "Choose avatar image...";
+    avatarFileNameDisplay.style.color = "var(--muted)";
+    avatarFileNameDisplay.style.borderColor = "rgba(255, 255, 255, 0.2)";
+    bannerFileNameDisplay.textContent = "Choose banner image...";
+    bannerFileNameDisplay.style.color = "var(--muted)";
+    bannerFileNameDisplay.style.borderColor = "rgba(255, 255, 255, 0.2)";
+    audioFileNameDisplay.textContent = "Choose audio file...";
+    audioFileNameDisplay.style.color = "var(--muted)";
+    audioFileNameDisplay.style.borderColor = "rgba(255, 255, 255, 0.2)";
+    regModal.classList.remove("active");
+  } catch (error) {
+    console.error("Error creating bubble:", error);
+    alert("Error creating bubble. Please try again.");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Create Bubble";
+  }
 };
 
 
@@ -892,7 +978,9 @@ popupLinkBox.onclick = () => { if (popupLink.href) window.open(popupLink.href, '
 
 function playSound(file){
   if(!file) return;
+  // Use Web Audio API for better performance
   const audio = new Audio(file);
+  audio.volume = 0.5; // Set reasonable volume
   audio.play().catch(e => console.log("Audio play failed:", e));
 }
 
@@ -930,9 +1018,16 @@ class DraggableElement {
     this.isDragging = false;
     this.offsetX = 0;
     this.offsetY = 0;
+    
+    // Bind methods to preserve context
+    this.onMouseDown = this.onMouseDown.bind(this);
+    this.onTouchStart = this.onTouchStart.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.onTouchMove = this.onTouchMove.bind(this);
+    this.stopDrag = this.stopDrag.bind(this);
 
-    this.element.addEventListener('mousedown', (e) => this.onMouseDown(e));
-    this.element.addEventListener('touchstart', (e) => this.onTouchStart(e));
+    this.element.addEventListener('mousedown', this.onMouseDown);
+    this.element.addEventListener('touchstart', this.onTouchStart);
   }
 
   onMouseDown(e) {
@@ -953,10 +1048,10 @@ class DraggableElement {
     this.offsetX = clientX - rect.left;
     this.offsetY = clientY - rect.top;
 
-    document.addEventListener('mousemove', (e) => this.onMouseMove(e));
-    document.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
-    document.addEventListener('mouseup', () => this.stopDrag());
-    document.addEventListener('touchend', () => this.stopDrag());
+    document.addEventListener('mousemove', this.onMouseMove);
+    document.addEventListener('touchmove', this.onTouchMove, { passive: false });
+    document.addEventListener('mouseup', this.stopDrag);
+    document.addEventListener('touchend', this.stopDrag);
   }
 
   onMouseMove(e) {
@@ -985,10 +1080,10 @@ class DraggableElement {
     this.isDragging = false;
     this.element.classList.remove('dragging');
 
-    document.removeEventListener('mousemove', (e) => this.onMouseMove(e));
-    document.removeEventListener('touchmove', (e) => this.onTouchMove(e));
-    document.removeEventListener('mouseup', () => this.stopDrag());
-    document.removeEventListener('touchend', () => this.stopDrag());
+    document.removeEventListener('mousemove', this.onMouseMove);
+    document.removeEventListener('touchmove', this.onTouchMove);
+    document.removeEventListener('mouseup', this.stopDrag);
+    document.removeEventListener('touchend', this.stopDrag);
   }
 }
 
