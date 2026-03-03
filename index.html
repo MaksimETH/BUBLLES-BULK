@@ -582,14 +582,6 @@ body::before {
   transform: none;
 }
 
-.bubble-limit-warning {
-  color: var(--success);
-  font-size: 0.8rem;
-  margin-top: 10px;
-  text-align: center;
-  font-weight: 500;
-}
-
 /* Animation */
 
 @keyframes popupShow {
@@ -701,9 +693,6 @@ body::before {
       </div>
       
       <button type="submit" class="submit-btn" id="submitBtn">Create Bubble</button>
-      <div class="bubble-limit-warning" id="bubbleLimitWarning" style="display: none;">
-        Maximum 10 bubbles reached. Delete one to add a new bubble.
-      </div>
     </form>
     
     <div class="close" id="closeRegBtn">Cancel</div>
@@ -729,8 +718,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-// BUBBLE LIMIT CONSTANT
-const MAX_BUBBLES = 10;
 let users = [];
 let isCreatingBubble = false;
 
@@ -748,22 +735,16 @@ async function loadUsers() {
   users = [];
   snapshot.forEach(doc => users.push(doc.data()));
   createAllBubbles();
-  updateBubbleLimit();
 }
 
 async function saveUser(user) {
-  if (users.length >= MAX_BUBBLES) {
-    alert(`Maximum ${MAX_BUBBLES} bubbles reached. Please delete one before adding a new bubble.`);
-    return;
-  }
   await db.collection("users").add(user);
   await loadUsers();
 }
 
 function createAllBubbles() {
   document.querySelectorAll(".bubble-container").forEach(b => b.remove());
-  // Only create bubbles up to the limit
-  users.slice(0, MAX_BUBBLES).forEach(user => createBubble(user));
+  users.forEach(user => createBubble(user));
 }
 
 function createBubble(user) {
@@ -819,22 +800,6 @@ function createBubble(user) {
   };
 
   document.body.appendChild(bubbleContainer);
-}
-
-function updateBubbleLimit() {
-  const warningEl = document.getElementById("bubbleLimitWarning");
-  const submitBtn = document.getElementById("submitBtn");
-  const openRegBtn = document.getElementById("openRegBtn");
-  
-  if (users.length >= MAX_BUBBLES) {
-    warningEl.style.display = "block";
-    submitBtn.disabled = true;
-    openRegBtn.disabled = true;
-  } else {
-    warningEl.style.display = "none";
-    submitBtn.disabled = false;
-    openRegBtn.disabled = false;
-  }
 }
 
 const popup = document.getElementById("popup");
@@ -910,12 +875,6 @@ async function uploadToCloudinary(file) {
 
 regForm.onsubmit = async (e) => {
   e.preventDefault();
-
-  // Check bubble limit before creating
-  if (users.length >= MAX_BUBBLES) {
-    alert(`Maximum ${MAX_BUBBLES} bubbles reached. Please delete one before adding a new bubble.`);
-    return;
-  }
 
   const submitBtn = document.getElementById("submitBtn");
   submitBtn.disabled = true;
